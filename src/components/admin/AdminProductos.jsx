@@ -22,7 +22,7 @@ const AdminProductos = () => {
     precio: "",
     imageUrl: "",
     imagePublicId: "",
-    estado: "activo",
+    estado: "activo", // <-- ya incluimos estado por defecto
     categoria: "",
     subcategoria: "",
     destacados: false,
@@ -41,6 +41,7 @@ const AdminProductos = () => {
   const token = localStorage.getItem("token");
   const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
 
+  // --- FETCH PRODUCTOS ---
   const fetchProductos = async (page = 1, search = "") => {
     try {
       const res = await axios.get(
@@ -55,10 +56,7 @@ const AdminProductos = () => {
     }
   };
 
-  useEffect(() => {
-    fetchProductos();
-  }, []);
-
+  useEffect(() => { fetchProductos(); }, []);
   useEffect(() => {
     const t = setTimeout(() => fetchProductos(1, busqueda), 300);
     return () => clearTimeout(t);
@@ -76,14 +74,12 @@ const AdminProductos = () => {
   const handleImagenChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
       alert("Las variables de Cloudinary no están configuradas correctamente.");
       return;
     }
 
     setSubiendoImagen(true);
-
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -114,6 +110,11 @@ const AdminProductos = () => {
 
   // --- GUARDAR PRODUCTO ---
   const guardarProducto = async () => {
+    if (!token) {
+      alert("No estás logueada. Por favor, inicia sesión.");
+      return;
+    }
+
     const precioFloat = Number(producto.precio.replace(/\./g, "").replace(",", "."));
     if (!precioFloat || precioFloat <= 0) {
       alert("Precio inválido");
@@ -153,8 +154,12 @@ const AdminProductos = () => {
       setEditandoId(null);
       fetchProductos(pagina, busqueda);
     } catch (err) {
-      console.error("Error guardando producto:", err.response?.data || err.message);
-      alert("Error guardando producto. Revisá la consola para más info.");
+      if (err.response?.status === 403) {
+        alert("No tienes permisos para realizar esta acción (403).");
+      } else {
+        console.error("Error guardando producto:", err.response?.data || err.message);
+        alert("Error guardando producto. Revisá la consola para más info.");
+      }
     }
   };
 
@@ -208,6 +213,12 @@ const AdminProductos = () => {
           <input type="checkbox" name="destacados" checked={producto.destacados} onChange={handleChange} />
           Destacado
         </label>
+
+        {/* NUEVO SELECT PARA ESTADO */}
+        <select name="estado" value={producto.estado} onChange={handleChange} className="border p-2 rounded">
+          <option value="activo">Activo</option>
+          <option value="inactivo">Inactivo</option>
+        </select>
 
         {categoriaSeleccionada?.tieneTalles && <input name="talles" value={producto.talles} onChange={handleChange} placeholder="Talles" className="border p-2 rounded" />}
         {categoriaSeleccionada?.tieneColores && <input name="colores" value={producto.colores} onChange={handleChange} placeholder="Colores" className="border p-2 rounded" />}
