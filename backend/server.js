@@ -19,7 +19,8 @@ const allowedOrigins = [
   'http://localhost:5173',
   'https://tiendabarby.vercel.app',
   'https://www.tiendabarby.vercel.app',
-];
+  process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null, // soporte deploy automático Vercel
+].filter(Boolean);
 
 // ✅ Configuración segura de CORS
 app.use(
