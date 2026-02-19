@@ -3,7 +3,7 @@ import User from '../models/user.js';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 import { Op } from 'sequelize';
-
+import dns from "dns";
 /* ==================== LOGIN ==================== */
 export const loginUsuario = async (req, res) => {
   try {
@@ -52,6 +52,17 @@ export const registrarUsuario = async (req, res) => {
     res.status(500).json({ success: false, message: 'Error al registrar usuario' });
   }
 };
+
+
+
+dns.lookup("smtp.gmail.com", (err, address) => {
+  if (err) {
+    console.log("❌ DNS ERROR:", err);
+  } else {
+    console.log("✅ SMTP resolves to:", address);
+  }
+});
+
 
 /* ==================== SMTP ==================== */
 const transporter = nodemailer.createTransport({
