@@ -67,14 +67,17 @@ dns.lookup("smtp.gmail.com", (err, address) => {
 /* ==================== SMTP ==================== */
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
-  port: 587,          // 🔥 CAMBIADO
-  secure: false,      // 🔥 CAMBIADO (para 587)
+  port: 465,          // 🔥 CAMBIADO
+  secure: true,      // 🔥 CAMBIADO (para 587)
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASSWORD,
   },
 });
 
+transporter.verify()
+  .then(() => console.log("SMTP conectado"))
+  .catch(err => console.log("SMTP verify error:", err));
 /* ==================== FORGOT PASSWORD ==================== */
 export const forgotPassword = async (req, res) => {
   try {
