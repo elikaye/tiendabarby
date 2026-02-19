@@ -53,29 +53,11 @@ export const registrarUsuario = async (req, res) => {
   }
 };
 
-/* ==================== USUARIOS ==================== */
-export const getUsuarios = async (req, res) => {
-  const usuarios = await User.findAll();
-  res.json(usuarios);
-};
-
-export const updateUsuario = async (req, res) => {
-  const { id } = req.params;
-  await User.update(req.body, { where: { id } });
-  res.json({ success: true });
-};
-
-export const deleteUsuario = async (req, res) => {
-  const { id } = req.params;
-  await User.destroy({ where: { id } });
-  res.json({ success: true });
-};
-
 /* ==================== SMTP ==================== */
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
-  port: 465,
-  secure: true, // IMPORTANTE
+  port: 587,          // 🔥 CAMBIADO
+  secure: false,      // 🔥 CAMBIADO (para 587)
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASSWORD,
@@ -93,7 +75,7 @@ export const forgotPassword = async (req, res) => {
     }
 
     const resetToken = crypto.randomBytes(32).toString('hex');
-    const resetTokenExp = Date.now() + 1000 * 60 * 30; // 30 min
+    const resetTokenExp = Date.now() + 1000 * 60 * 30;
 
     usuario.resetToken = resetToken;
     usuario.resetTokenExp = resetTokenExp;
