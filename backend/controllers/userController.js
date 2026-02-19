@@ -1,9 +1,8 @@
-// controllers/userController.js
 import jwt from 'jsonwebtoken';
 import User from '../models/user.js';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
-import { Op } from 'sequelize'; // <-- IMPORT CORRECTO
+import { Op } from 'sequelize';
 
 /* ==================== LOGIN ==================== */
 export const loginUsuario = async (req, res) => {
@@ -46,8 +45,7 @@ export const loginUsuario = async (req, res) => {
 /* ==================== REGISTRO ==================== */
 export const registrarUsuario = async (req, res) => {
   try {
-    const usuario = await User.create(req.body);
-
+    await User.create(req.body);
     res.status(201).json({ success: true, message: 'Usuario creado correctamente' });
   } catch (error) {
     console.error('❌ registrarUsuario:', error);
@@ -75,8 +73,13 @@ export const deleteUsuario = async (req, res) => {
 
 /* ==================== SMTP ==================== */
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASSWORD },
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true, // IMPORTANTE
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASSWORD,
+  },
 });
 
 /* ==================== FORGOT PASSWORD ==================== */
@@ -126,7 +129,7 @@ export const resetPassword = async (req, res) => {
     const usuario = await User.scope('withPassword').findOne({
       where: {
         resetToken: token,
-        resetTokenExp: { [Op.gt]: Date.now() }, // <-- CORRECCIÓN CLAVE
+        resetTokenExp: { [Op.gt]: Date.now() },
       },
     });
 
@@ -134,7 +137,7 @@ export const resetPassword = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Token inválido o expirado' });
     }
 
-    usuario.password = password; // se hashea en hooks
+    usuario.password = password;
     usuario.resetToken = null;
     usuario.resetTokenExp = null;
     await usuario.save();
