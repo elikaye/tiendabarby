@@ -3,7 +3,7 @@ import User from '../models/user.js';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 import { Op } from 'sequelize';
-import dns from "dns";
+
 /* ==================== LOGIN ==================== */
 export const loginUsuario = async (req, res) => {
   try {
@@ -22,7 +22,7 @@ export const loginUsuario = async (req, res) => {
 
     const token = jwt.sign(
       { id: usuario.id, rol: usuario.rol },
-      process.env.JWT_SECRET || 'secreto123',
+      process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
 
@@ -53,31 +53,22 @@ export const registrarUsuario = async (req, res) => {
   }
 };
 
-
-
-dns.lookup("smtp.gmail.com", (err, address) => {
-  if (err) {
-    console.log("❌ DNS ERROR:", err);
-  } else {
-    console.log("✅ SMTP resolves to:", address);
-  }
-});
-
-
-/* ==================== SMTP ==================== */
+/* ==================== OAUTH2 GMAIL ==================== */
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,          // 🔥 CAMBIADO
-  secure: true,      // 🔥 CAMBIADO (para 587)
+  service: "gmail",
   auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASSWORD,
+    type: "OAuth2",
+    user: process.env.GOOGLE_EMAIL,
+    clientId: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
   },
 });
 
 transporter.verify()
-  .then(() => console.log("SMTP conectado"))
-  .catch(err => console.log("SMTP verify error:", err));
+  .then(() => console.log("✅ Gmail OAuth2 conectado"))
+  .catch(err => console.log("❌ Gmail OAuth2 error:", err));
+
 /* ==================== FORGOT PASSWORD ==================== */
 export const forgotPassword = async (req, res) => {
   try {
@@ -98,14 +89,14 @@ export const forgotPassword = async (req, res) => {
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
 
     await transporter.sendMail({
-      from: `"Tienda Barbie" <${process.env.SMTP_USER}>`,
+      from: `"Tienda Barbie" <${process.env.GOOGLE_EMAIL}>`,
       to: usuario.email,
       subject: 'Recuperación de contraseña',
       html: `
         <p>Hola ${usuario.nombre},</p>
         <p>Hacé clic para restablecer tu contraseña:</p>
         <a href="${resetUrl}">${resetUrl}</a>
-        <p>Expira en 30 minutos</p>
+        <p>Este enlace expira en 30 minutos.</p>
       `,
     });
 
