@@ -25,6 +25,8 @@ dist-ssr
 
 # Ignorar archivos de entorno
 .env
+backend/.env
+
 
 # Ignorar base de datos local (por si usás SQLite alguna vez)
 *.sqlite
