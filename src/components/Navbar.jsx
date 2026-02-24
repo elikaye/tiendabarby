@@ -37,12 +37,17 @@ function Navbar() {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    if (!localQuery.trim()) return;
+    const q = localQuery.trim();
+    setQuery(q);
 
-    setQuery(localQuery.trim());
     setShowSearch(false);
     setMenuOpen(false);
-    navigate("/search");
+
+    if (!q) {
+      navigate("/"); // Si está vacío, ir a inicio
+    } else {
+      navigate("/search"); // Sino, ir a resultados
+    }
   };
 
   return (
@@ -94,6 +99,9 @@ function Navbar() {
                 placeholder="Buscar..."
                 value={localQuery}
                 onChange={(e) => setLocalQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSearchSubmit(e);
+                }}
                 className="absolute top-full mt-2 right-0 w-44 px-3 py-1 rounded text-sm shadow-md focus:outline-none z-50"
                 autoFocus
               />

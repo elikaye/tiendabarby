@@ -8,11 +8,11 @@ try { io = require("socket.io-client"); } catch(e){ io = null; }
 function normalizarCategoria(catRaw){
   if(!catRaw) return "otros";
   const cat = catRaw.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
-  if(cat.includes("ropa") || cat.includes("mujer") || cat.includes("dama") || cat.includes("femen")) return "ropa-dama";
+  if(cat.includes("mujer") || cat.includes("dama") || cat.includes("femen")) return "ropa-dama";
+  if(cat.includes("hombre") || cat.includes("varon") || cat.includes("caballero")) return "ropa-hombre";
   return "otros";
 }
 
-// Helper para dividir en filas según columnas
 const chunkArray = (arr, chunkSize) => {
   const result = [];
   for(let i=0;i<arr.length;i+=chunkSize){
@@ -82,7 +82,6 @@ export default function RopaDeDama(){
   return (
     <section className="min-h-screen py-20 px-6 bg-gradient-to-br from-pink-100 via-white to-pink-200 font-body">
       <div className="max-w-7xl mx-auto">
-        <h2 className="text-2xl font-bold mb-6 text-black drop-shadow-sm"></h2>
 
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
@@ -117,7 +116,7 @@ export default function RopaDeDama(){
             </div>
           </>
         ) : (
-          <p className="text-gray-600">No hay productos disponibles en esta sección por el momento.</p>
+          <p className="text-gray-600 text-center">No hay productos disponibles en esta sección por el momento.</p>
         )}
       </div>
     </section>

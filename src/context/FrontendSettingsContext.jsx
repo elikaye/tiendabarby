@@ -1,7 +1,5 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
-import { API_BASE_URL } from "../config";
 
 const FrontendSettingsContext = createContext();
 
@@ -15,10 +13,14 @@ export const FrontendSettingsProvider = ({ children }) => {
 
   const [loading, setLoading] = useState(true);
 
+  // ✅ CORRECCIÓN: usar import.meta.env para URL de producción o fallback local
+  const API =
+    import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/v1";
+
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const res = await axios.get(`${API_BASE_URL}/frontend-settings`);
+        const res = await axios.get(`${API}/frontend-settings`);
         if (res.data) {
           const sanitized = {
             bannerUrl: res.data.bannerUrl || null,
@@ -35,7 +37,7 @@ export const FrontendSettingsProvider = ({ children }) => {
       }
     };
     fetchSettings();
-  }, []);
+  }, [API]); // ✅ agregar API a dependencias para evitar warning
 
   const updateSettings = (newSettings) => {
     setSettings((prev) => ({

@@ -16,7 +16,7 @@ const AdminFrontend = () => {
   const [errorMessage, setErrorMessage] = useState(""); 
 
   useEffect(() => {
-    setLocalSettings(settings);a
+    setLocalSettings(settings);
   }, [settings]);
 
   const handleChange = (field, value) => {
