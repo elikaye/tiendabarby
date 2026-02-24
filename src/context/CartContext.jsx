@@ -8,10 +8,12 @@ import React, {
 import { useAuth } from "./AuthContext";
 
 const CartContext = createContext();
-
 export const useCart = () => useContext(CartContext);
 
-const API = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+// ✅ Unificado con tu variable real
+const API =
+  import.meta.env.VITE_API_BASE_URL ||
+  "http://localhost:5000/api/v1";
 
 // 🔹 normaliza productos para evitar duplicados
 const normalizarCarrito = (productos = []) => {
@@ -55,9 +57,11 @@ export const CartProvider = ({ children }) => {
     const loadCarrito = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`${API}/api/v1/carrito`, {
+        const res = await fetch(`${API}/carrito`, {
           headers: headersWithAuth(),
         });
+
+        if (!res.ok) throw new Error("Error cargando carrito");
 
         const data = await res.json();
         setCarrito(normalizarCarrito(data?.productos || []));
@@ -76,6 +80,7 @@ export const CartProvider = ({ children }) => {
   const agregarAlCarrito = async (producto, cantidad = 1) => {
     if (!token || !producto?.id) return;
 
+    // Optimistic update
     setCarrito((prev) =>
       normalizarCarrito([...prev, { ...producto, cantidad }])
     );
@@ -83,11 +88,13 @@ export const CartProvider = ({ children }) => {
     setSyncingIds((prev) => [...prev, producto.id]);
 
     try {
-      const res = await fetch(`${API}/api/v1/carrito/add`, {
+      const res = await fetch(`${API}/carrito/add`, {
         method: "POST",
         headers: headersWithAuth(),
         body: JSON.stringify({ producto: { ...producto, cantidad } }),
       });
+
+      if (!res.ok) throw new Error("Error agregando producto");
 
       const data = await res.json();
       setCarrito(normalizarCarrito(data?.productos || []));
@@ -114,13 +121,15 @@ export const CartProvider = ({ children }) => {
     setSyncingIds((prev) => [...prev, productoId]);
 
     try {
-      const res = await fetch(`${API}/api/v1/carrito/add`, {
+      const res = await fetch(`${API}/carrito/add`, {
         method: "POST",
         headers: headersWithAuth(),
         body: JSON.stringify({
           producto: { id: productoId, cantidad: cantidadNum },
         }),
       });
+
+      if (!res.ok) throw new Error("Error actualizando cantidad");
 
       const data = await res.json();
       setCarrito(normalizarCarrito(data?.productos || []));
@@ -139,11 +148,13 @@ export const CartProvider = ({ children }) => {
     setSyncingIds((prev) => [...prev, productoId]);
 
     try {
-      const res = await fetch(`${API}/api/v1/carrito/remove`, {
+      const res = await fetch(`${API}/carrito/remove`, {
         method: "PUT",
         headers: headersWithAuth(),
         body: JSON.stringify({ productoId }),
       });
+
+      if (!res.ok) throw new Error("Error eliminando producto");
 
       const data = await res.json();
       setCarrito(normalizarCarrito(data?.productos || []));
@@ -163,10 +174,12 @@ export const CartProvider = ({ children }) => {
     setCarrito([]);
 
     try {
-      await fetch(`${API}/api/v1/carrito/clear`, {
+      const res = await fetch(`${API}/carrito/clear`, {
         method: "PUT",
         headers: headersWithAuth(),
       });
+
+      if (!res.ok) throw new Error("Error vaciando carrito");
     } catch (err) {
       console.error("❌ Error vaciando carrito:", err);
     } finally {

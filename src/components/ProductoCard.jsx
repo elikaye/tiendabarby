@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { FaHeart, FaShoppingBag } from "react-icons/fa";
 import { useCart } from "../context/CartContext";
 import { useFavoritos } from "../context/FavoritosContext";
@@ -12,7 +12,6 @@ const ProductoCard = ({ producto }) => {
   const [loaded, setLoaded] = useState(false);
   const [loadingFav, setLoadingFav] = useState(false);
   const [processingCart, setProcessingCart] = useState(false);
-  const [isFavorito, setIsFavorito] = useState(false);
 
   const { user } = useAuth();
   const { carrito, agregarAlCarrito, eliminarDelCarrito } = useCart();
@@ -22,21 +21,22 @@ const ProductoCard = ({ producto }) => {
 
   const esActivo = producto.estado === "activo";
 
+  // ✅ Carrito (no se toca)
   const estaEnCarrito = Array.isArray(carrito)
     ? carrito.some((p) => p.id?.toString() === producto.id?.toString())
     : false;
 
-  useEffect(() => {
-    const yaEsFavorito = Array.isArray(favoritos)
-      ? favoritos.some(
-          (f) =>
-            (f?.producto_id || f?.id)?.toString() ===
-            producto.id?.toString()
-        )
-      : false;
-
-    setIsFavorito(yaEsFavorito);
-  }, [favoritos, producto.id]);
+  // ✅ Favorito derivado 100% del context (SIN estado local)
+  const isFavorito = Array.isArray(favoritos)
+    ? favoritos.some((f) =>
+        (
+          f?.producto_id ||
+          f?.producto?.id ||
+          f?.id ||
+          f?._id
+        )?.toString() === producto.id?.toString()
+      )
+    : false;
 
   const toggleFavorito = async (e) => {
     e.preventDefault();
@@ -49,13 +49,12 @@ const ProductoCard = ({ producto }) => {
     }
 
     setLoadingFav(true);
+
     try {
       if (isFavorito) {
         await eliminarFavorito(producto.id);
-        setIsFavorito(false);
       } else {
         await agregarFavorito(producto);
-        setIsFavorito(true);
       }
     } catch {
       toast.error("No se pudo actualizar favoritos");
@@ -64,6 +63,7 @@ const ProductoCard = ({ producto }) => {
     }
   };
 
+  // ✅ Carrito intacto
   const handleToggleCarrito = async (e) => {
     e.preventDefault();
     e.stopPropagation();

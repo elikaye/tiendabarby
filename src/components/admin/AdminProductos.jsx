@@ -215,7 +215,7 @@ const AdminProductos = () => {
         </label>
 
         {/* NUEVO SELECT PARA ESTADO */}
-        <select name="estado" value={producto.estado} onChange={handleChange} className="border p-2 rounded">
+        <select name="estado" value={producto.estado} onChange={handleChange} className="border p-6 rounded">
           <option value="activo">Activo</option>
           <option value="inactivo">Inactivo</option>
         </select>
