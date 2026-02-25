@@ -48,14 +48,14 @@ export default function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 title={alt}
-                className="transition duration-300 hover:brightness-125"
+                className="transition duration-300 hover:brightness-125 hover:drop-shadow-[0_0_6px_rgba(236,72,153,0.8)]"
               >
                 <img
                   src={src}
                   alt={alt}
                   className="w-6 h-6 transition-transform duration-300 hover:scale-110"
                   style={{
-                    filter: 'drop-shadow(0 0 6px rgba(231,51,201,0.8))',
+                    filter: 'drop-shadow(0 0 8px rgba(236,72,153,0.9))',
                   }}
                 />
               </a>
@@ -104,21 +104,21 @@ export default function Footer() {
           © {new Date().getFullYear()} Barby Indumentaria. Todos los derechos reservados.
         </p>
 
-        {/* FIRMA CON SHIMMER CORREGIDO */}
+        {/* FIRMA SHIMMER FUCSIA */}
         <p
           className="
             mt-4
             font-body font-extralight tracking-widest
-            text-sm leading-tight
+            text-base leading-tight
             sm:text-xl sm:leading-normal
             bg-clip-text text-transparent
           "
           style={{
             backgroundImage:
-              'linear-gradient(135deg, #d1d5db 0%, #ffffff 25%, #d1d5db 50%, #ffffff 75%, #d1d5db 100%)',
+              'linear-gradient(135deg, #f9a8d4 0%, #ec4899 25%, #d946ef 50%, #ec4899 75%, #f9a8d4 100%)',
             backgroundSize: '200% 200%',
             animation: 'shimmer 3s infinite linear',
-            filter: 'drop-shadow(0 0 10px rgba(247,37,133,0.8))',
+            filter: 'drop-shadow(0 0 12px rgba(236,72,153,0.9))',
           }}
         >
           Diseñado por{' '}
