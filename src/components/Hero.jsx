@@ -40,22 +40,19 @@ export default function Hero() {
           "
         />
       </div>
-
-      {/* CINTA INFINITA */}
-      {cintaVisible && cintaTexto && (
-        <div className="absolute bottom-0 left-0 w-full overflow-hidden bg-pink-400/80 backdrop-blur-sm py-2">
-          <div className="flex min-w-max animate-marquee">
-            {[...Array(2)].map((_, i) => (
-              <span
-                key={i}
-                className="flex items-center gap-4 px-8 text-sm sm:text-base font-semibold whitespace-nowrap"
-              >
-                {cintaTexto} • {cintaTexto} • {cintaTexto} •
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-    </section>
+{/* CINTA INFINITA */}
+{cintaVisible && cintaTexto && (
+  <div className="absolute bottom-0 left-0 w-full overflow-hidden bg-pink-400/50 backdrop-blur-sm py-2">
+    <div className="flex w-max animate-marquee">
+      <span className="flex-shrink-0 px-20 whitespace-pre">
+        {cintaTexto}
+      </span>
+      <span className="flex-shrink-0 px-20 whitespace-pre">
+        {cintaTexto}
+      </span>
+    </div>
+  </div>
+)}
+</section>    
   );
 }
