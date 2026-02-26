@@ -51,23 +51,22 @@ export const registrarUsuario = async (req, res) => {
     console.error('❌ registrarUsuario:', error);
     res.status(500).json({ success: false, message: 'Error al registrar usuario' });
   }
-};
+}; 
 
-/* ==================== OAUTH2 GMAIL ==================== */
+/* ==================== transporter Gmail ==================== */
+
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false, // true sería 465
   auth: {
-    type: "OAuth2",
     user: process.env.GOOGLE_EMAIL,
-    clientId: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
+    pass: process.env.GOOGLE_APP_PASSWORD,
+  },
+  tls: {
+    rejectUnauthorized: false,
   },
 });
-
-transporter.verify()
-  .then(() => console.log("✅ Gmail OAuth2 conectado"))
-  .catch(err => console.log("❌ Gmail OAuth2 error:", err));
 
 /* ==================== FORGOT PASSWORD ==================== */
 export const forgotPassword = async (req, res) => {
