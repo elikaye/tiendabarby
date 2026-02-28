@@ -14,15 +14,15 @@ import frontendSettingsRoutes from './routes/frontendSettingsRoutes.js';
 dotenv.config();
 const app = express();
 
-// 🌐 PERMITIMOS LOCAL Y PRODUCCIÓN (Vercel, etc.)
+// 🌐 Orígenes permitidos
 const allowedOrigins = [
   'http://localhost:5173',
   'https://tiendabarby.vercel.app',
   'https://www.tiendabarby.vercel.app',
-  process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null, // soporte deploy automático Vercel
+  process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
 ].filter(Boolean);
 
-// ✅ Configuración segura de CORS
+// ✅ CORS seguro
 app.use(
   cors({
     origin: function (origin, callback) {
@@ -40,10 +40,9 @@ app.use(
 );
 
 app.options('*', cors());
-
 app.use(express.json());
 
-// 📦 Rutas principales
+// 📦 Rutas
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/products', productRoutes);
 app.use('/api/v1/carrito', cartRoutes);
@@ -51,13 +50,17 @@ app.use('/api/v1/ordenes', orderRoutes);
 app.use('/api/v1/favoritos', favoritoRoutes);
 app.use('/api/v1/frontend-settings', frontendSettingsRoutes);
 
-// 🧠 Test del servidor
-app.get('/', (req, res) => res.send('✅ API funcionando 🚀'));
+// 🧠 Ruta test
+app.get('/', (req, res) => {
+  res.send('✅ API funcionando 🚀');
+});
 
-// 🚧 Manejo de errores 404
-app.use((req, res) => res.status(404).json({ message: 'Ruta no encontrada' }));
+// 🚧 404
+app.use((req, res) => {
+  res.status(404).json({ message: 'Ruta no encontrada' });
+});
 
-// ⚠️ Manejo de errores globales
+// ⚠️ Error global
 app.use((err, req, res, next) => {
   console.error('🔴 Error global:', err.message);
   res.status(500).json({ message: 'Error interno del servidor' });
@@ -65,34 +68,21 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-// ⚙️ Verificamos variables de entorno necesarias
-[
-  'DB_NAME',
-  'DB_USER',
-  'DB_PASSWORD',
-  'DB_HOST',
-  'DB_PORT',
-  'CLOUDINARY_CLOUD_NAME',
-  'CLOUDINARY_API_KEY',
-  'CLOUDINARY_API_SECRET',
-  'JWT_SECRET',
-].forEach((key) => {
-  if (!process.env[key]) console.warn(`⚠️ Variable de entorno faltante: ${key}`);
-});
+// 🔗 Conexión DB y arranque
+(async () => {
+  try {
+    await sequelize.authenticate();
+    console.log('✅ Conectado a MySQL con Sequelize');
 
-// 🔗 Conexión a la base de datos y arranque del servidor
-try {
-  await sequelize.authenticate();
-  console.log('✅ Conectado a MySQL con Sequelize');
+    // 🚫 IMPORTANTE: SIN alter ni force en producción
+    await sequelize.sync();
+    console.log('✅ Tablas sincronizadas');
 
-  // 🔥 ESTO CREA LAS TABLAS EN RAILWAY
-  await sequelize.sync({ alter: true });
-  console.log('✅ Tablas sincronizadas');
-
-  app.listen(PORT, () =>
-    console.log(`🚀 Servidor corriendo en puerto ${PORT}`)
-  );
-} catch (err) {
-  console.error('❌ Error al conectar con Sequelize:', err.message);
-  process.exit(1);
-}
+    app.listen(PORT, () => {
+      console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
+    });
+  } catch (error) {
+    console.error('❌ Error al conectar con Sequelize:', error.message);
+    process.exit(1);
+  }
+})();
