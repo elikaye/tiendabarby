@@ -5,7 +5,6 @@ import { Op } from 'sequelize';
 import sgMail from '@sendgrid/mail';
 
 /* ==================== CONFIG SENDGRID ==================== */
-
 console.log("📨 SENDGRID_API_KEY existe?", !!process.env.SENDGRID_API_KEY);
 console.log("📨 EMAIL_FROM:", process.env.EMAIL_FROM);
 console.log("🌐 FRONTEND_URL:", process.env.FRONTEND_URL);
@@ -114,6 +113,7 @@ export const forgotPassword = async (req, res) => {
         <p>Hacé clic para restablecer tu contraseña:</p>
         <a href="${resetUrl}">${resetUrl}</a>
         <p>Este enlace expira en 30 minutos.</p>
+        <p>Si no ves el email, revisá tu bandeja de entrada o la carpeta de spam.</p>
       `,
     });
 
