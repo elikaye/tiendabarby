@@ -51,20 +51,17 @@ export const registrarUsuario = async (req, res) => {
     console.error('❌ registrarUsuario:', error);
     res.status(500).json({ success: false, message: 'Error al registrar usuario' });
   }
-}; 
+};
 
-/* ==================== transporter Gmail ==================== */
+/* ==================== TRANSPORTER SENDGRID ==================== */
 
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
+  host: "smtp.sendgrid.net",
   port: 587,
-  secure: false, // true sería 465
+  secure: false,
   auth: {
-    user: process.env.GOOGLE_EMAIL,
-    pass: process.env.GOOGLE_APP_PASSWORD,
-  },
-  tls: {
-    rejectUnauthorized: false,
+    user: "apikey", // ⚠️ literal así
+    pass: process.env.SENDGRID_API_KEY,
   },
 });
 
@@ -88,7 +85,7 @@ export const forgotPassword = async (req, res) => {
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
 
     await transporter.sendMail({
-      from: `"Tienda Barbie" <${process.env.GOOGLE_EMAIL}>`,
+      from: `"Tienda Barbie" <${process.env.EMAIL_FROM}>`,
       to: usuario.email,
       subject: 'Recuperación de contraseña',
       html: `
