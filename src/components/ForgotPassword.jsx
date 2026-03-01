@@ -1,4 +1,3 @@
-// src/components/ForgotPassword.jsx
 
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -22,7 +21,7 @@ const ForgotPassword = () => {
 
     try {
       const response = await axios.post(
-        `${API_BASE_URL}/users/forgot-password`,
+        `${API_BASE_URL}/users/forgot-password`, // 👈 SIN /api/v1 acá
         { email }
       );
 
@@ -52,7 +51,6 @@ const ForgotPassword = () => {
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* EMAIL */}
           <div>
             <label className="block font-body font-semibold mb-1">
               Email
@@ -66,7 +64,6 @@ const ForgotPassword = () => {
             />
           </div>
 
-          {/* BOTÓN */}
           <button
             type="submit"
             disabled={loading}

@@ -23,8 +23,8 @@ export default function Hero() {
       {/* BLUR COSTADOS */}
       {bannerBlur && bannerUrl && (
         <>
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-24 bg-white/40 backdrop-blur-md z-10" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-white/40 backdrop-blur-md z-10" />
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-24 bg-black/30 backdrop-blur-md z-10" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-black/30 backdrop-blur-md z-10" />
         </>
       )}
 
@@ -40,19 +40,21 @@ export default function Hero() {
           "
         />
       </div>
-{/* CINTA INFINITA */}
-{cintaVisible && cintaTexto && (
-  <div className="absolute bottom-0 left-0 w-full overflow-hidden bg-pink-400/50 backdrop-blur-sm py-2">
-    <div className="flex w-max animate-marquee">
-      <span className="flex-shrink-0 px-20 whitespace-pre">
-        {cintaTexto}
-      </span>
-      <span className="flex-shrink-0 px-20 whitespace-pre">
-        {cintaTexto}
-      </span>
-    </div>
-  </div>
-)}
-</section>    
+
+      {/* CINTA INFINITA */}
+      {cintaVisible && cintaTexto && (
+        <div className="absolute bottom-0 left-0 w-full overflow-hidden bg-pink-400/50 backdrop-blur-sm py-2 z-30">
+          <div className="flex w-max animate-marquee">
+            <span className="flex-shrink-0 px-20 whitespace-pre">
+              {cintaTexto}
+            </span>
+            <span className="flex-shrink-0 px-20 whitespace-pre">
+              {cintaTexto}
+            </span>
+          </div>
+        </div>
+      )}
+
+    </section>
   );
 }

@@ -13,7 +13,6 @@ export const FrontendSettingsProvider = ({ children }) => {
 
   const [loading, setLoading] = useState(true);
 
-  // ✅ CORRECCIÓN: usar import.meta.env para URL de producción o fallback local
   const API =
     import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/v1";
 
@@ -21,13 +20,15 @@ export const FrontendSettingsProvider = ({ children }) => {
     const fetchSettings = async () => {
       try {
         const res = await axios.get(`${API}/frontend-settings`);
+
         if (res.data) {
           const sanitized = {
             bannerUrl: res.data.bannerUrl || null,
-            bannerBlur: Boolean(res.data.bannerBlur),
+            bannerBlur: Number(res.data.bannerBlur) === 1,
             cintaTexto: res.data.cintaTexto || "",
-            cintaVisible: res.data.cintaVisible ?? true,
+            cintaVisible: Number(res.data.cintaVisible) === 1,
           };
+
           setSettings(sanitized);
         }
       } catch (error) {
@@ -36,14 +37,28 @@ export const FrontendSettingsProvider = ({ children }) => {
         setLoading(false);
       }
     };
-    fetchSettings();
-  }, [API]); // ✅ agregar API a dependencias para evitar warning
 
-  const updateSettings = (newSettings) => {
-    setSettings((prev) => ({
-      ...prev,
-      ...newSettings,
-    }));
+    fetchSettings();
+  }, [API]);
+
+  const updateSettings = async (newSettings) => {
+    try {
+      const res = await axios.put(`${API}/frontend-settings`, {
+        ...settings,
+        ...newSettings,
+      });
+
+      const sanitized = {
+        bannerUrl: res.data.bannerUrl || null,
+        bannerBlur: Number(res.data.bannerBlur) === 1,
+        cintaTexto: res.data.cintaTexto || "",
+        cintaVisible: Number(res.data.cintaVisible) === 1,
+      };
+
+      setSettings(sanitized);
+    } catch (error) {
+      console.error("Error guardando settings:", error);
+    }
   };
 
   return (

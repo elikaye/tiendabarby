@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { FaBars, FaTimes, FaUserCircle, FaShoppingCart } from "react-icons/fa";
 import { LayoutDashboard, Heart, Search } from "lucide-react";
 
@@ -12,6 +12,7 @@ function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [localQuery, setLocalQuery] = useState("");
+  const [activeSection, setActiveSection] = useState("/"); // Para menú mobile
 
   const { carrito } = useCart();
   const { favoritos } = useFavoritos();
@@ -19,6 +20,7 @@ function Navbar() {
   const { user, logout } = useAuth();
 
   const navigate = useNavigate();
+  const location = useLocation();
 
   const secciones = [
     ["Inicio", "/"],
@@ -28,6 +30,11 @@ function Navbar() {
     ["Bazar", "/bazar"],
     ["Artículos de temporada", "/articulos-de-temporada"],
   ];
+
+  useEffect(() => {
+    // Cada vez que cambie la ruta, actualizamos la sección activa
+    setActiveSection(location.pathname);
+  }, [location.pathname]);
 
   const handleLogout = () => {
     logout();
@@ -44,9 +51,9 @@ function Navbar() {
     setMenuOpen(false);
 
     if (!q) {
-      navigate("/"); // Si está vacío, ir a inicio
+      navigate("/");
     } else {
-      navigate("/search"); // Sino, ir a resultados
+      navigate("/search");
     }
   };
 
@@ -61,9 +68,7 @@ function Navbar() {
               to={to}
               className={({ isActive }) =>
                 `flex items-center gap-2 transition ${
-                  isActive
-                    ? "text-pink-500"
-                    : "text-black hover:text-pink-500"
+                  isActive ? "text-pink-500" : "text-black hover:text-pink-500"
                 }`
               }
             >
@@ -153,15 +158,23 @@ function Navbar() {
 
       {/* MENÚ MOBILE */}
       {menuOpen && (
-        <nav className="md:hidden bg-black/10 backdrop-blur-md px-6 py-4 flex flex-col gap-4 text-white font-bold">
+        <nav className="md:hidden bg-black/10 backdrop-blur-md px-6 py-4 flex flex-col gap-4 font-bold">
           {secciones.map(([label, to]) => (
             <NavLink
               key={to}
               to={to}
               onClick={() => setMenuOpen(false)}
-              className="flex items-center gap-2 hover:text-pink-500"
+              className={({ isActive }) =>
+                `flex items-center gap-2 transition ${
+                  activeSection === to ? "text-pink-500" : "text-white hover:text-pink-500"
+                }`
+              }
             >
-              <span className="w-2 h-2 rounded-full bg-white" />
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  activeSection === to ? "bg-pink-500" : "bg-white"
+                }`}
+              />
               {label}
             </NavLink>
           ))}
