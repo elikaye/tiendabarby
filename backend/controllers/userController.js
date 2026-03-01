@@ -1,8 +1,16 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/user.js';
-import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 import { Op } from 'sequelize';
+import sgMail from '@sendgrid/mail';
+
+/* ==================== CONFIG SENDGRID ==================== */
+
+console.log("📨 SENDGRID_API_KEY existe?", !!process.env.SENDGRID_API_KEY);
+console.log("📨 EMAIL_FROM:", process.env.EMAIL_FROM);
+console.log("🌐 FRONTEND_URL:", process.env.FRONTEND_URL);
+
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 /* ==================== LOGIN ==================== */
 export const loginUsuario = async (req, res) => {
@@ -67,22 +75,6 @@ export const registrarUsuario = async (req, res) => {
   }
 };
 
-/* ==================== TRANSPORTER SENDGRID ==================== */
-
-console.log("📨 SENDGRID_API_KEY existe?", !!process.env.SENDGRID_API_KEY);
-console.log("📨 EMAIL_FROM:", process.env.EMAIL_FROM);
-console.log("🌐 FRONTEND_URL:", process.env.FRONTEND_URL);
-
-const transporter = nodemailer.createTransport({
-  host: "smtp.sendgrid.net",
-  port: 587,
-  secure: false,
-  auth: {
-    user: "apikey",
-    pass: process.env.SENDGRID_API_KEY,
-  },
-});
-
 /* ==================== FORGOT PASSWORD ==================== */
 export const forgotPassword = async (req, res) => {
   try {
@@ -113,9 +105,9 @@ export const forgotPassword = async (req, res) => {
     console.log("🔗 URL de reset:", resetUrl);
     console.log("📤 Enviando email a:", usuario.email);
 
-    await transporter.sendMail({
-      from: `"Tienda Barbie" <${process.env.EMAIL_FROM}>`,
+    await sgMail.send({
       to: usuario.email,
+      from: process.env.EMAIL_FROM, // debe estar verificado en SendGrid
       subject: 'Recuperación de contraseña',
       html: `
         <p>Hola ${usuario.nombre},</p>
