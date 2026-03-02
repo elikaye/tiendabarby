@@ -1,4 +1,5 @@
 import Carrito from "../models/carrito.js";
+import Producto from "../models/product.js";
 
 // 🔹 Asegurar array siempre
 const parseArray = (data) => {
@@ -27,7 +28,7 @@ export const getCarrito = async (req, res) => {
   }
 };
 
-// 🛒 Agregar producto al carrito
+// 🛒 Agregar producto al carrito con talle y color
 export const addCarrito = async (req, res) => {
   try {
     const userId = req.user?.id;
@@ -40,12 +41,28 @@ export const addCarrito = async (req, res) => {
 
     const cantidad = Number(producto.cantidad || 1);
 
+    // 🔹 Traer el producto completo de la base
+    const productoDB = await Producto.findByPk(producto.id);
+    if (!productoDB)
+      return res.status(404).json({ error: "Producto no encontrado" });
+
+    // 🔹 Normalizar producto incluyendo talle y color
+    // Convertimos colores y talles a arrays (si son strings, separarlos)
+    const coloresArray = productoDB.colores
+      ? productoDB.colores.split(",").map(c => c.trim())
+      : [];
+    const tallesArray = productoDB.talles
+      ? productoDB.talles.replace(/Talles\s*\(/, "").replace(/\)/, "").split(",").map(t => t.trim())
+      : [];
+
     const productoNormalizado = {
-      id: producto.id,
-      nombre: producto.nombre,
-      precio: producto.precio,
-      imageUrl: producto.imageUrl,
+      id: productoDB.id,
+      nombre: productoDB.nombre,
+      precio: productoDB.precio,
+      imageUrl: productoDB.imageUrl,
       cantidad,
+      talles: tallesArray, // Ahora es un array
+      colores: coloresArray, // Ahora es un array
     };
 
     let carrito = await Carrito.findOne({ where: { user_id: userId } });

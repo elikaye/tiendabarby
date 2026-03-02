@@ -1,7 +1,5 @@
-
 import React, { useState } from "react";
-import { FaHeart, FaShoppingBag } from "react-icons/fa";
-import { useCart } from "../context/CartContext";
+import { FaHeart } from "react-icons/fa";
 import { useFavoritos } from "../context/FavoritosContext";
 import { useAuth } from "../context/AuthContext";
 import { Link } from "react-router-dom";
@@ -11,20 +9,13 @@ import { CLOUDINARY_BASE_URL } from "../config";
 const ProductoCard = ({ producto }) => {
   const [loaded, setLoaded] = useState(false);
   const [loadingFav, setLoadingFav] = useState(false);
-  const [processingCart, setProcessingCart] = useState(false);
 
   const { user } = useAuth();
-  const { carrito, agregarAlCarrito, eliminarDelCarrito } = useCart();
   const { favoritos, agregarFavorito, eliminarFavorito } = useFavoritos();
 
   if (!producto) return null;
 
   const esActivo = producto.estado === "activo";
-
-  // ✅ Carrito (no se toca)
-  const estaEnCarrito = Array.isArray(carrito)
-    ? carrito.some((p) => p.id?.toString() === producto.id?.toString())
-    : false;
 
   // ✅ Favorito derivado 100% del context (SIN estado local)
   const isFavorito = Array.isArray(favoritos)
@@ -63,33 +54,6 @@ const ProductoCard = ({ producto }) => {
     }
   };
 
-  // ✅ Carrito intacto
-  const handleToggleCarrito = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (processingCart || !esActivo) return;
-
-    if (!user) {
-      toast.info("🛒 Iniciá sesión para poder comprar");
-      return;
-    }
-
-    setProcessingCart(true);
-    try {
-      if (estaEnCarrito) {
-        await eliminarDelCarrito(producto.id);
-        toast.info("Producto eliminado del carrito");
-      } else {
-        await agregarAlCarrito(producto, 1);
-        toast.success("Producto agregado al carrito");
-      }
-    } catch {
-      toast.error("No se pudo actualizar el carrito");
-    } finally {
-      setProcessingCart(false);
-    }
-  };
-
   const imgSrc = producto.imageUrl
     ? producto.imageUrl.startsWith("http")
       ? producto.imageUrl
@@ -102,7 +66,7 @@ const ProductoCard = ({ producto }) => {
 
   return (
     <Link
-      to={`/producto/${producto.id}`}
+      to={`/producto/${producto.id}`} // 🔹 Aquí redirige a detalle de producto
       className="
         relative bg-white text-black rounded-xl
         shadow-md hover:shadow-lg
@@ -146,21 +110,14 @@ const ProductoCard = ({ producto }) => {
       </p>
 
       {esActivo ? (
-        <button
-          onClick={handleToggleCarrito}
-          className={`mt-2 px-3 py-1.5 rounded-full text-xs font-body
-            flex items-center gap-2
-            mx-auto
-            transition
-            ${
-              estaEnCarrito
-                ? "bg-pink-500 text-white"
-                : "bg-black text-white hover:bg-pink-500"
-            }`}
+        <p
+          className="mt-2 px-3 py-1.5 rounded-full text-xs font-body
+          flex items-center gap-2
+          mx-auto
+          text-white bg-black hover:bg-pink-500 text-center cursor-pointer"
         >
-          <FaShoppingBag size={14} />
-          {estaEnCarrito ? "En carrito" : "Comprar"}
-        </button>
+          Ver producto
+        </p>
       ) : (
         <p className="mt-2 text-xs text-gray-500 italic text-center">
           Producto sin stock

@@ -19,12 +19,10 @@ const Carrito = () => {
     syncingIds,
   } = useCart();
 
-  // 🔹 Scroll al top al cargar
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
-  // 🔹 Generar link WhatsApp con useMemo
   const linkWhatsApp = useMemo(() => {
     if (!carrito.length) return "#";
 
@@ -32,43 +30,35 @@ const Carrito = () => {
       .map((p) => {
         const precioUnitario = Number(p.precio || 0).toLocaleString("es-AR");
         const subtotal = Number(p.precio || 0) * p.cantidad;
-        const subtotalFormateado = subtotal.toLocaleString("es-AR");
-
-        const imageLink =
-          p.imageUrl || p.image || p.imagen
-            ? `Ver imagen: ${p.imageUrl || p.image || p.imagen}`
-            : "Imagen no disponible";
 
         return `• ${p.nombre}
-${imageLink}
+${p.color ? `Color: ${p.color}` : ""}
+${p.talle ? `Talle: ${p.talle}` : ""}
 Precio unitario: $${precioUnitario}
 Cantidad: ${p.cantidad}
-Subtotal: $${subtotalFormateado}`;
+Subtotal: $${subtotal.toLocaleString("es-AR")}`;
       })
       .join("\n\n");
-
-    const totalFormateado = total.toLocaleString("es-AR");
 
     const mensaje = `Hola 😊  
 Quiero consultar por la compra de los siguientes productos:
 
 ${productosTexto}
 
-Total estimado: $${totalFormateado}
+Total estimado: $${total.toLocaleString("es-AR")}
 
-Quedo a la espera para confirmar stock, modelos y disponibilidad.`;
+Quedo a la espera para confirmar stock y disponibilidad.`;
 
     return `https://wa.me/${numeroTienda}?text=${encodeURIComponent(mensaje)}`;
   }, [carrito, total]);
 
-  // 🔒 Si no hay sesión
   if (!user) {
     return (
       <div className="min-h-screen pt-12 md:pt-24 pb-20 px-4 text-center bg-gradient-to-br from-pink-100 via-white to-pink-200">
         <h1 className="text-3xl font-body font-semibold mb-6">Tu carrito</h1>
 
         <p className="text-gray-600 mb-6">
-          Para agregar productos y finalizar una compra necesitás iniciar sesión.
+          Para agregar productos necesitás iniciar sesión.
         </p>
 
         <Link
@@ -102,24 +92,26 @@ Quedo a la espera para confirmar stock, modelos y disponibilidad.`;
       ) : (
         <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-4 md:p-6 space-y-4">
           {carrito.map((producto) => {
-            const { id, nombre, precio, cantidad } = producto;
-            const precioNum = Number(precio || 0);
-            const subtotal = precioNum * cantidad;
+            const precioNum = Number(producto.precio || 0);
+            const subtotal = precioNum * producto.cantidad;
 
             const imgSrc =
-              producto.imageUrl || producto.image || producto.imagen || placeholderImg;
+              producto.imageUrl ||
+              producto.image ||
+              producto.imagen ||
+              placeholderImg;
 
-            const syncing = syncingIds.includes(id);
+            const syncing = syncingIds.includes(producto.uniqueKey);
 
             return (
               <div
-                key={id}
+                key={producto.uniqueKey}
                 className="flex flex-col md:flex-row items-center md:justify-between border-b pb-4 gap-4"
               >
                 <div className="flex items-center gap-4 w-full md:w-auto">
                   <img
                     src={imgSrc}
-                    alt={nombre}
+                    alt={producto.nombre}
                     className="w-20 h-20 object-contain rounded"
                     onError={(e) => {
                       e.currentTarget.src = placeholderImg;
@@ -127,7 +119,19 @@ Quedo a la espera para confirmar stock, modelos y disponibilidad.`;
                   />
 
                   <div className="flex-1">
-                    <h2 className="font-semibold">{nombre}</h2>
+                    <h2 className="font-semibold">{producto.nombre}</h2>
+
+                    {producto.color && (
+                      <p className="text-sm text-gray-500">
+                        Color: {producto.color}
+                      </p>
+                    )}
+
+                    {producto.talle && (
+                      <p className="text-sm text-gray-500">
+                        Talle: {producto.talle}
+                      </p>
+                    )}
 
                     <p className="text-sm text-gray-500">
                       Precio unitario:{" "}
@@ -145,8 +149,8 @@ Quedo a la espera para confirmar stock, modelos y disponibilidad.`;
                 <div className="flex items-center gap-2 mt-2 md:mt-0">
                   <button
                     onClick={() =>
-                      cantidad === 1
-                        ? eliminarDelCarrito(id)
+                      producto.cantidad === 1
+                        ? eliminarDelCarrito(producto.uniqueKey)
                         : agregarAlCarrito(producto, -1)
                     }
                     disabled={syncing}
@@ -155,7 +159,9 @@ Quedo a la espera para confirmar stock, modelos y disponibilidad.`;
                     −
                   </button>
 
-                  <span className="w-8 text-center font-semibold">{cantidad}</span>
+                  <span className="w-8 text-center font-semibold">
+                    {producto.cantidad}
+                  </span>
 
                   <button
                     onClick={() => agregarAlCarrito(producto, 1)}
@@ -166,7 +172,7 @@ Quedo a la espera para confirmar stock, modelos y disponibilidad.`;
                   </button>
 
                   <button
-                    onClick={() => eliminarDelCarrito(id)}
+                    onClick={() => eliminarDelCarrito(producto.uniqueKey)}
                     disabled={syncing}
                     className="text-pink-500 hover:text-black transition text-lg"
                   >
@@ -180,10 +186,6 @@ Quedo a la espera para confirmar stock, modelos y disponibilidad.`;
           <div className="text-right text-xl font-semibold text-pink-600">
             Total: ${total.toLocaleString("es-AR")}
           </div>
-
-          <p className="text-sm text-gray-500 mt-2">
-            La confirmación final de stock y modelos se realiza por WhatsApp.
-          </p>
 
           <div className="mt-4 flex justify-center">
             <a

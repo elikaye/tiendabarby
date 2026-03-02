@@ -17,6 +17,8 @@ const DetalleProducto = () => {
   const [loading, setLoading] = useState(true);
   const [loadingFav, setLoadingFav] = useState(false);
   const [addingCart, setAddingCart] = useState(false);
+  const [colorSeleccionado, setColorSeleccionado] = useState("");
+  const [talleSeleccionado, setTalleSeleccionado] = useState("");
 
   const token = localStorage.getItem("token");
 
@@ -25,10 +27,13 @@ const DetalleProducto = () => {
       try {
         const res = await fetch(`${API_BASE_URL}/products/${id}`);
         if (!res.ok) throw new Error("Error cargando producto");
+
         const data = await res.json();
+        console.log("📦 Producto recibido de API:", data);
+
         setProducto(data);
       } catch (err) {
-        console.error(err);
+        console.error("❌ Error fetchProducto:", err);
         toast.error("No se pudo cargar el producto");
       } finally {
         setLoading(false);
@@ -37,19 +42,40 @@ const DetalleProducto = () => {
     fetchProducto();
   }, [id]);
 
-  if (loading) {
-    return <div className="text-center py-16 text-gray-500">Cargando producto…</div>;
-  }
+  if (loading) return <div className="text-center py-16 text-gray-500">Cargando producto…</div>;
+  if (!producto) return <div className="text-center py-16 text-gray-500">Producto no encontrado</div>;
 
-  if (!producto) {
-    return <div className="text-center py-16 text-gray-500">Producto no encontrado</div>;
-  }
+  // 🔹 Normalizar colores y talles desde strings
+  const parseColores = (colores) => {
+    if (!colores) return [];
+    if (Array.isArray(colores)) return colores;
+    // separar por comas o "y"
+    return colores
+      .replace(/\s+y\s+/g, ",") // cambia " y " por ","
+      .split(",")
+      .map(c => c.trim())
+      .filter(c => c);
+  };
+
+  const parseTalles = (talles) => {
+    if (!talles) return [];
+    if (Array.isArray(talles)) return talles;
+    // eliminar "Talles(...)" y separar por comas
+    return talles
+      .replace(/Talles\s*\(|\)/gi, "")
+      .split(",")
+      .map(t => t.trim())
+      .filter(t => t);
+  };
+
+  const coloresArray = parseColores(producto.colores);
+  const tallesArray = parseTalles(producto.talles);
+
+  console.log("✅ Colores normalizados:", coloresArray);
+  console.log("✅ Talles normalizados:", tallesArray);
 
   const favoritosArray = Array.isArray(favoritos) ? favoritos : [];
-  const isFavorito = favoritosArray.some((f) => {
-    const favId = f?.producto_id || f?.id;
-    return favId?.toString() === producto.id?.toString();
-  });
+  const isFavorito = favoritosArray.some((f) => (f?.producto_id || f?.id)?.toString() === producto.id?.toString());
 
   const toggleFavorito = async () => {
     if (!token) {
@@ -71,24 +97,45 @@ const DetalleProducto = () => {
   };
 
   const carritoArray = Array.isArray(carrito) ? carrito : [];
-  const isInCart = carritoArray.some((item) => {
-    const itemId = item.producto_id || item.id;
-    return itemId?.toString() === producto.id?.toString();
-  });
+  const isInCart = carritoArray.some((item) => (item.producto_id || item.id)?.toString() === producto.id?.toString());
 
-  const handleComprar = async () => {
+  const handleAgregarAlCarrito = async () => {
     if (!token) {
       toast.info("Iniciá sesión para poder comprar", { autoClose: 1500 });
       return;
     }
+
+    if (!colorSeleccionado && coloresArray.length > 0) {
+      toast.info("Por favor, seleccioná un color", { autoClose: 2000 });
+      return;
+    }
+
+    if (!talleSeleccionado && tallesArray.length > 0) {
+      toast.info("Por favor, seleccioná un talle", { autoClose: 2000 });
+      return;
+    }
+
     if (addingCart || producto.estado !== "activo") return;
 
     try {
       setAddingCart(true);
-      isInCart
-        ? await eliminarDelCarrito(producto.id)
-        : await agregarAlCarrito(producto, 1);
-    } catch {
+
+      const productoParaCarrito = {
+        ...producto,
+        color: colorSeleccionado || null,
+        talle: talleSeleccionado || null,
+      };
+      console.log("🛒 Producto que se envía al carrito:", productoParaCarrito);
+
+      if (isInCart) {
+        await eliminarDelCarrito(producto.id);
+        toast.info(`${producto.nombre} eliminado del carrito`, { autoClose: 1500 });
+      } else {
+        await agregarAlCarrito(productoParaCarrito, 1);
+        toast.success(`${producto.nombre} agregado al carrito`, { autoClose: 1500 });
+      }
+    } catch (err) {
+      console.error("❌ Error agregando al carrito:", err);
       toast.error("No se pudo actualizar el carrito");
     } finally {
       setAddingCart(false);
@@ -107,20 +154,16 @@ const DetalleProducto = () => {
     <div className="bg-white px-3 py-6 md:px-20 md:py-10">
       <div className="max-w-4xl mx-auto bg-white rounded-lg md:shadow-lg p-4 md:p-8 relative">
 
-        {/* Favoritos */}
         <button
           onClick={toggleFavorito}
           disabled={loadingFav}
           className={`absolute top-3 right-3 text-2xl md:text-3xl
-            ${isFavorito ? "text-pink-600" : "text-black hover:text-pink-600"}
-          `}
+            ${isFavorito ? "text-pink-600" : "text-black hover:text-pink-600"}`}
         >
           <FaHeart />
         </button>
 
-        <h2 className="text-xl md:text-3xl font-body mb-4 text-center">
-          {producto.nombre}
-        </h2>
+        <h2 className="text-xl md:text-3xl font-body mb-4 text-center">{producto.nombre}</h2>
 
         <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
           <img
@@ -132,27 +175,52 @@ const DetalleProducto = () => {
 
           <div className="flex flex-col gap-3 w-full text-center md:text-left">
             {productoInactivo && (
-              <div className="bg-red-100 text-red-700 px-4 py-2 rounded">
-                ❌ Producto sin stock
-              </div>
+              <div className="bg-red-100 text-red-700 px-4 py-2 rounded">❌ Producto sin stock</div>
             )}
 
             {producto.descripcion && <p className="text-gray-700">{producto.descripcion}</p>}
-            {producto.colores && <p><strong>Colores:</strong> {producto.colores}</p>}
-            {producto.talles && <p><strong>Talles:</strong> {producto.talles}</p>}
 
-            <p className="text-2xl font-body text-pink-600">
+            {/* Selector de colores */}
+            {coloresArray.length > 0 && (
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold">Elegí un color:</label>
+                <select
+                  className="border rounded px-2 py-1"
+                  value={colorSeleccionado}
+                  onChange={(e) => setColorSeleccionado(e.target.value)}
+                >
+                  <option value="">--Seleccionar--</option>
+                  {coloresArray.map((c) => (<option key={c} value={c}>{c}</option>))}
+                </select>
+              </div>
+            )}
+
+            {/* Selector de talles */}
+            {tallesArray.length > 0 && (
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold">Elegí un talle:</label>
+                <select
+                  className="border rounded px-2 py-1"
+                  value={talleSeleccionado}
+                  onChange={(e) => setTalleSeleccionado(e.target.value)}
+                >
+                  <option value="">--Seleccionar--</option>
+                  {tallesArray.map((t) => (<option key={t} value={t}>{t}</option>))}
+                </select>
+              </div>
+            )}
+
+            <p className="text-2xl font-body text-pink-600 mt-2">
               ${new Intl.NumberFormat("es-AR").format(producto.precio)}
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 mt-2">
               <button
-                onClick={handleComprar}
+                onClick={handleAgregarAlCarrito}
                 disabled={addingCart || productoInactivo}
                 className="bg-pink-500 text-white px-6 py-2 rounded-lg hover:bg-black transition flex items-center justify-center gap-2"
               >
-                <FaShoppingBag />
-                {isInCart ? "Quitar del carrito" : "Agregar al carrito"}
+                <FaShoppingBag /> {isInCart ? "Quitar del carrito" : "Agregar al carrito"}
               </button>
 
               <button
@@ -162,6 +230,13 @@ const DetalleProducto = () => {
                 Seguir comprando
               </button>
             </div>
+
+            {(coloresArray.length > 0 || tallesArray.length > 0) && (
+              <p className="text-xs italic mt-1 text-gray-500">
+                ✅ La clienta confirmará stock y disponibilidad del color/talle seleccionado.
+              </p>
+            )}
+
           </div>
         </div>
       </div>

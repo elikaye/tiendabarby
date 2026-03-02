@@ -1,22 +1,14 @@
 import { useEffect, useState, useRef } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay } from 'swiper/modules';
-import { FaShoppingBag } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
-import { useCart } from '../context/CartContext';
-import { useAuth } from '../context/AuthContext';
 import 'swiper/css';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 
 function Destacados() {
   const [productos, setProductos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeIndex, setActiveIndex] = useState(0);
-
-  const { carrito, agregarAlCarrito, eliminarDelCarrito } = useCart();
-  const { user } = useAuth();
   const swiperRef = useRef(null);
 
   useEffect(() => {
@@ -38,35 +30,6 @@ function Destacados() {
     fetchProductos();
     return () => setProductos([]);
   }, []);
-
-  const estaEnCarrito = (id) =>
-    carrito?.some((p) => p.id?.toString() === id?.toString());
-
-  const handleComprar = async (e, producto) => {
-    e.preventDefault();
-    e.stopPropagation();
-    toast.dismiss();
-    if (!user) {
-      toast.info("Iniciá sesión para comprar este producto", { autoClose: 2000 });
-      return;
-    }
-    if (producto.estado !== "activo") {
-      toast.info(`${producto.nombre} no tiene stock por el momento`, { autoClose: 2000 });
-      return;
-    }
-    try {
-      if (estaEnCarrito(producto.id)) {
-        await eliminarDelCarrito(producto.id);
-        toast.info(`${producto.nombre} eliminado del carrito`, { autoClose: 1500 });
-      } else {
-        await agregarAlCarrito(producto, 1);
-        toast.success(`${producto.nombre} agregado al carrito`, { autoClose: 1500 });
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("No se pudo actualizar el carrito");
-    }
-  };
 
   const renderSkeletons = () =>
     Array(6)
@@ -112,7 +75,6 @@ function Destacados() {
           {loading
             ? renderSkeletons()
             : productos.map((prod, idx) => {
-                const enCarrito = estaEnCarrito(prod.id);
                 const precioFormateado = Number(prod.precio || 0).toLocaleString('es-AR');
                 const isActive = idx === activeIndex;
 
@@ -141,14 +103,12 @@ function Destacados() {
                               ${precioFormateado}
                             </p>
                             {prod.estado === "activo" ? (
-                              <button
-                                onClick={(e) => handleComprar(e, prod)}
-                                className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full text-sm sm:text-sm font-body font-semibold shadow-lg transition
-                                  ${enCarrito ? 'bg-pink-500 text-white hover:bg-pink-600' : 'bg-black text-white hover:bg-pink-600'}`}
+                              <p
+                                className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full text-sm sm:text-sm font-body font-semibold shadow-lg transition
+                                  bg-black text-white hover:bg-pink-600 text-center cursor-pointer"
                               >
-                                <FaShoppingBag size={14} />
-                                {enCarrito ? 'En carrito' : 'Comprar'}
-                              </button>
+                                Ver producto
+                              </p>
                             ) : (
                               <span className="text-gray-400 italic text-sm">
                                 Disponible próximamente
