@@ -5,7 +5,7 @@ import { FaTrashAlt } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import placeholderImg from "../assets/carrito-de-compras.png";
 
-const numeroTienda = "+5491164283906";
+const numeroTienda = "5491164283906";
 
 const Carrito = () => {
   const { user } = useAuth();
@@ -28,15 +28,37 @@ const Carrito = () => {
 
     const productosTexto = carrito
       .map((p) => {
-        const precioUnitario = Number(p.precio || 0).toLocaleString("es-AR");
-        const subtotal = Number(p.precio || 0) * p.cantidad;
+        const precioNum = Number(p.precio ?? p.price ?? 0);
+        const precioUnitario = precioNum.toLocaleString("es-AR");
+        const subtotal = precioNum * p.cantidad;
+
+        const color =
+          p.color ??
+          p.selectedColor ??
+          p.variantColor ??
+          "";
+
+        const talle =
+          p.talle ??
+          p.selectedTalle ??
+          p.size ??
+          "";
+
+        const imagenLink =
+          p.imageUrl ??
+          p.imagen ??
+          p.image ??
+          p.img ??
+          "";
 
         return `• ${p.nombre}
-${p.color ? `Color: ${p.color}` : ""}
-${p.talle ? `Talle: ${p.talle}` : ""}
+
+Color: ${color || "No especificado"}
+Talle: ${talle || "No especificado"}
 Precio unitario: $${precioUnitario}
 Cantidad: ${p.cantidad}
-Subtotal: $${subtotal.toLocaleString("es-AR")}`;
+Subtotal: $${subtotal.toLocaleString("es-AR")}
+${imagenLink ? `Ver producto: ${imagenLink}` : ""}`;
       })
       .join("\n\n");
 
@@ -49,13 +71,17 @@ Total estimado: $${total.toLocaleString("es-AR")}
 
 Quedo a la espera para confirmar stock y disponibilidad.`;
 
-    return `https://wa.me/${numeroTienda}?text=${encodeURIComponent(mensaje)}`;
+    return `https://wa.me/${numeroTienda}?text=${encodeURIComponent(
+      mensaje
+    )}`;
   }, [carrito, total]);
 
   if (!user) {
     return (
       <div className="min-h-screen pt-12 md:pt-24 pb-20 px-4 text-center bg-gradient-to-br from-pink-100 via-white to-pink-200">
-        <h1 className="text-3xl font-body font-semibold mb-6">Tu carrito</h1>
+        <h1 className="text-3xl font-body font-semibold mb-6">
+          Tu carrito
+        </h1>
 
         <p className="text-gray-600 mb-6">
           Para agregar productos necesitás iniciar sesión.
@@ -97,11 +123,17 @@ Quedo a la espera para confirmar stock y disponibilidad.`;
 
             const imgSrc =
               producto.imageUrl ||
-              producto.image ||
               producto.imagen ||
+              producto.image ||
               placeholderImg;
 
             const syncing = syncingIds.includes(producto.uniqueKey);
+
+            const color =
+              producto.color || producto.selectedColor || "";
+
+            const talle =
+              producto.talle || producto.selectedTalle || "";
 
             return (
               <div
@@ -119,17 +151,19 @@ Quedo a la espera para confirmar stock y disponibilidad.`;
                   />
 
                   <div className="flex-1">
-                    <h2 className="font-semibold">{producto.nombre}</h2>
+                    <h2 className="font-semibold">
+                      {producto.nombre}
+                    </h2>
 
-                    {producto.color && (
+                    {color && (
                       <p className="text-sm text-gray-500">
-                        Color: {producto.color}
+                        Color: {color}
                       </p>
                     )}
 
-                    {producto.talle && (
+                    {talle && (
                       <p className="text-sm text-gray-500">
-                        Talle: {producto.talle}
+                        Talle: {talle}
                       </p>
                     )}
 
@@ -172,7 +206,9 @@ Quedo a la espera para confirmar stock y disponibilidad.`;
                   </button>
 
                   <button
-                    onClick={() => eliminarDelCarrito(producto.uniqueKey)}
+                    onClick={() =>
+                      eliminarDelCarrito(producto.uniqueKey)
+                    }
                     disabled={syncing}
                     className="text-pink-500 hover:text-black transition text-lg"
                   >
