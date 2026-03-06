@@ -41,6 +41,8 @@ import RopaDeDama from "./pages/RopaDeDama";
 import RopaDeHombre from "./pages/RopaDeHombre";
 import Calzados from "./pages/Calzados";
 import Bazar from "./pages/Bazar";
+import Maquillaje from "./pages/Maquillaje";
+import Blanqueria from "./pages/Blanqueria";
 import ArticulosDeTemporada from "./pages/ArticulosDeTemporada";
 
 /* ===============================
@@ -61,6 +63,7 @@ const AppContent = () => {
 
       <main className="flex-1 overflow-visible">
         <Routes>
+
           <Route
             path="/"
             element={
@@ -74,10 +77,42 @@ const AppContent = () => {
 
           <Route path="/search" element={<SearchResults />} />
 
+          {/* ===============================
+             ROPA DE DAMA
+          =============================== */}
           <Route path="/ropa-dama" element={<RopaDeDama />} />
+          <Route path="/ropa-dama/remeras-camisetas" element={<RopaDeDama />} />
+          <Route path="/ropa-dama/pantalones-jean" element={<RopaDeDama />} />
+          <Route path="/ropa-dama/buzos-camperas" element={<RopaDeDama />} />
+          <Route path="/ropa-dama/shorts-conjuntos" element={<RopaDeDama />} />
+          <Route path="/ropa-dama/otros" element={<RopaDeDama />} />
+
+          {/* ===============================
+             ROPA DE HOMBRE
+          =============================== */}
           <Route path="/ropa-hombre" element={<RopaDeHombre />} />
+          <Route path="/ropa-hombre/remeras-camisetas" element={<RopaDeHombre />} />
+          <Route path="/ropa-hombre/joggins-jeans" element={<RopaDeHombre />} />
+          <Route path="/ropa-hombre/buzos-camperas" element={<RopaDeHombre />} />
+          <Route path="/ropa-hombre/shorts-conjuntos" element={<RopaDeHombre />} />
+          <Route path="/ropa-hombre/otros" element={<RopaDeHombre />} />
+
+          {/* ===============================
+             CALZADOS
+          =============================== */}
           <Route path="/calzados" element={<Calzados />} />
+          <Route path="/calzados/borcegos" element={<Calzados />} />
+          <Route path="/calzados/zapatillas-adultos" element={<Calzados />} />
+          <Route path="/calzados/zapatillas-ninos" element={<Calzados />} />
+          <Route path="/calzados/ojotas-pantuflas" element={<Calzados />} />
+          <Route path="/calzados/sandalias" element={<Calzados />} />
+
           <Route path="/bazar" element={<Bazar />} />
+
+          {/* NUEVAS CATEGORÍAS */}
+          <Route path="/maquillaje" element={<Maquillaje />} />
+          <Route path="/blanqueria" element={<Blanqueria />} />
+
           <Route
             path="/articulos-de-temporada"
             element={<ArticulosDeTemporada />}
@@ -105,6 +140,7 @@ const AppContent = () => {
           />
 
           <Route path="/ropa" element={<Navigate to="/ropa-dama" />} />
+
         </Routes>
       </main>
     </>
@@ -122,10 +158,11 @@ function App() {
           <SearchProvider>
             <FavoritosProvider>
               <Router>
+
                 <ScrollToTop />
 
                 <div className="font-sans text-black flex flex-col relative min-h-screen overflow-x-hidden">
-                  {/* Fondo animado */}
+
                   <div className="absolute top-0 left-0 w-full h-full -z-10 bg-gradient-to-br from-pink-100 via-white to-pink-200 bg-[length:300%_300%] animate-gradient" />
 
                   <AppContent />
@@ -141,7 +178,9 @@ function App() {
                     autoClose={3000}
                     theme="colored"
                   />
+
                 </div>
+
               </Router>
             </FavoritosProvider>
           </SearchProvider>

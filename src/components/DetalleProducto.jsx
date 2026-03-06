@@ -6,6 +6,12 @@ import { useFavoritos } from "../context/FavoritosContext";
 import { toast } from "react-toastify";
 import { API_BASE_URL, CLOUDINARY_BASE_URL } from "../config";
 
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation } from "swiper/modules";
+
+import "swiper/css";
+import "swiper/css/navigation";
+
 const DetalleProducto = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -19,6 +25,7 @@ const DetalleProducto = () => {
   const [addingCart, setAddingCart] = useState(false);
   const [colorSeleccionado, setColorSeleccionado] = useState("");
   const [talleSeleccionado, setTalleSeleccionado] = useState("");
+  const [imagenActiva, setImagenActiva] = useState("");
 
   const token = localStorage.getItem("token");
 
@@ -27,11 +34,10 @@ const DetalleProducto = () => {
       try {
         const res = await fetch(`${API_BASE_URL}/products/${id}`);
         if (!res.ok) throw new Error("Error cargando producto");
-
         const data = await res.json();
         console.log("📦 Producto recibido de API:", data);
-
         setProducto(data);
+        setImagenActiva(data.imageUrl);
       } catch (err) {
         console.error("❌ Error fetchProducto:", err);
         toast.error("No se pudo cargar el producto");
@@ -42,40 +48,43 @@ const DetalleProducto = () => {
     fetchProducto();
   }, [id]);
 
-  if (loading) return <div className="text-center py-16 text-gray-500">Cargando producto…</div>;
-  if (!producto) return <div className="text-center py-16 text-gray-500">Producto no encontrado</div>;
+  if (loading)
+    return (
+      <div className="text-center py-16 text-gray-500">Cargando producto…</div>
+    );
 
-  // 🔹 Normalizar colores y talles desde strings
+  if (!producto)
+    return (
+      <div className="text-center py-16 text-gray-500">Producto no encontrado</div>
+    );
+
   const parseColores = (colores) => {
     if (!colores) return [];
     if (Array.isArray(colores)) return colores;
-    // separar por comas o "y"
     return colores
-      .replace(/\s+y\s+/g, ",") // cambia " y " por ","
+      .replace(/\s+y\s+/g, ",")
       .split(",")
-      .map(c => c.trim())
-      .filter(c => c);
+      .map((c) => c.trim())
+      .filter((c) => c);
   };
 
   const parseTalles = (talles) => {
     if (!talles) return [];
     if (Array.isArray(talles)) return talles;
-    // eliminar "Talles(...)" y separar por comas
     return talles
       .replace(/Talles\s*\(|\)/gi, "")
       .split(",")
-      .map(t => t.trim())
-      .filter(t => t);
+      .map((t) => t.trim())
+      .filter((t) => t);
   };
 
   const coloresArray = parseColores(producto.colores);
   const tallesArray = parseTalles(producto.talles);
 
-  console.log("✅ Colores normalizados:", coloresArray);
-  console.log("✅ Talles normalizados:", tallesArray);
-
   const favoritosArray = Array.isArray(favoritos) ? favoritos : [];
-  const isFavorito = favoritosArray.some((f) => (f?.producto_id || f?.id)?.toString() === producto.id?.toString());
+  const isFavorito = favoritosArray.some(
+    (f) => (f?.producto_id || f?.id)?.toString() === producto.id?.toString()
+  );
 
   const toggleFavorito = async () => {
     if (!token) {
@@ -83,7 +92,6 @@ const DetalleProducto = () => {
       return;
     }
     if (loadingFav) return;
-
     setLoadingFav(true);
     try {
       isFavorito
@@ -97,36 +105,32 @@ const DetalleProducto = () => {
   };
 
   const carritoArray = Array.isArray(carrito) ? carrito : [];
-  const isInCart = carritoArray.some((item) => (item.producto_id || item.id)?.toString() === producto.id?.toString());
+  const isInCart = carritoArray.some(
+    (item) => (item.producto_id || item.id)?.toString() === producto.id?.toString()
+  );
 
   const handleAgregarAlCarrito = async () => {
     if (!token) {
       toast.info("Iniciá sesión para poder comprar", { autoClose: 1500 });
       return;
     }
-
     if (!colorSeleccionado && coloresArray.length > 0) {
       toast.info("Por favor, seleccioná un color", { autoClose: 2000 });
       return;
     }
-
     if (!talleSeleccionado && tallesArray.length > 0) {
       toast.info("Por favor, seleccioná un talle", { autoClose: 2000 });
       return;
     }
-
     if (addingCart || producto.estado !== "activo") return;
 
     try {
       setAddingCart(true);
-
       const productoParaCarrito = {
         ...producto,
         color: colorSeleccionado || null,
         talle: talleSeleccionado || null,
       };
-      console.log("🛒 Producto que se envía al carrito:", productoParaCarrito);
-
       if (isInCart) {
         await eliminarDelCarrito(producto.id);
         toast.info(`${producto.nombre} eliminado del carrito`, { autoClose: 1500 });
@@ -148,6 +152,12 @@ const DetalleProducto = () => {
       : `${CLOUDINARY_BASE_URL}${producto.imageUrl}`
     : "/placeholder.png";
 
+  // 🔹 Aquí está la corrección: usamos `producto.imagenes` para el carrusel
+  const imagenesProducto = [
+    producto.imageUrl,
+    ...(producto.imagenes || []),
+  ].filter(Boolean);
+
   const productoInactivo = producto.estado !== "activo";
 
   return (
@@ -157,30 +167,65 @@ const DetalleProducto = () => {
         <button
           onClick={toggleFavorito}
           disabled={loadingFav}
-          className={`absolute top-3 right-3 text-2xl md:text-3xl
-            ${isFavorito ? "text-pink-600" : "text-black hover:text-pink-600"}`}
+          className={`absolute top-3 right-3 text-2xl md:text-3xl ${
+            isFavorito ? "text-pink-600" : "text-black hover:text-pink-600"
+          }`}
         >
           <FaHeart />
         </button>
 
-        <h2 className="text-xl md:text-3xl font-body mb-4 text-center">{producto.nombre}</h2>
+        <h2 className="text-xl md:text-3xl font-body mb-4 text-center">
+          {producto.nombre}
+        </h2>
 
         <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
-          <img
-            src={imgSrc}
-            alt={producto.nombre}
-            className="w-full max-w-[220px] md:max-w-xs h-56 md:h-80 object-contain rounded-lg"
-            onError={(e) => (e.currentTarget.src = "/placeholder.png")}
-          />
 
+          {/* GALERIA */}
+          <div className="flex flex-col items-center gap-3">
+
+            <img
+              src={imagenActiva || imgSrc}
+              alt={producto.nombre}
+              className="w-full max-w-[220px] md:max-w-xs h-56 md:h-80 object-contain rounded-lg"
+              onError={(e) => (e.currentTarget.src = "/placeholder.png")}
+            />
+
+            {imagenesProducto.length > 1 && (
+              <Swiper
+                modules={[Navigation]}
+                navigation
+                spaceBetween={10}
+                slidesPerView={4}
+                className="w-[220px] md:w-[260px]"
+              >
+                {imagenesProducto.map((img, i) => (
+                  <SwiperSlide key={i}>
+                    <img
+                      src={img}
+                      onClick={() => setImagenActiva(img)}
+                      className={`h-16 w-full object-contain border rounded cursor-pointer ${
+                        imagenActiva === img ? "border-pink-500" : "border-gray-300"
+                      }`}
+                    />
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+            )}
+          </div>
+
+          {/* DETALLES */}
           <div className="flex flex-col gap-3 w-full text-center md:text-left">
+
             {productoInactivo && (
-              <div className="bg-red-100 text-red-700 px-4 py-2 rounded">❌ Producto sin stock</div>
+              <div className="bg-red-100 text-red-700 px-4 py-2 rounded">
+                ❌ Producto sin stock
+              </div>
             )}
 
-            {producto.descripcion && <p className="text-gray-700">{producto.descripcion}</p>}
+            {producto.descripcion && (
+              <p className="text-gray-700">{producto.descripcion}</p>
+            )}
 
-            {/* Selector de colores */}
             {coloresArray.length > 0 && (
               <div className="flex flex-col gap-1">
                 <label className="font-semibold">Elegí un color:</label>
@@ -190,12 +235,13 @@ const DetalleProducto = () => {
                   onChange={(e) => setColorSeleccionado(e.target.value)}
                 >
                   <option value="">--Seleccionar--</option>
-                  {coloresArray.map((c) => (<option key={c} value={c}>{c}</option>))}
+                  {coloresArray.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
                 </select>
               </div>
             )}
 
-            {/* Selector de talles */}
             {tallesArray.length > 0 && (
               <div className="flex flex-col gap-1">
                 <label className="font-semibold">Elegí un talle:</label>
@@ -205,7 +251,9 @@ const DetalleProducto = () => {
                   onChange={(e) => setTalleSeleccionado(e.target.value)}
                 >
                   <option value="">--Seleccionar--</option>
-                  {tallesArray.map((t) => (<option key={t} value={t}>{t}</option>))}
+                  {tallesArray.map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
                 </select>
               </div>
             )}
@@ -220,7 +268,8 @@ const DetalleProducto = () => {
                 disabled={addingCart || productoInactivo}
                 className="bg-pink-500 text-white px-6 py-2 rounded-lg hover:bg-black transition flex items-center justify-center gap-2"
               >
-                <FaShoppingBag /> {isInCart ? "Quitar del carrito" : "Agregar al carrito"}
+                <FaShoppingBag />
+                {isInCart ? "Quitar del carrito" : "Agregar al carrito"}
               </button>
 
               <button

@@ -1,13 +1,12 @@
 import React, { useEffect, useState, useRef } from "react";
 import ProductoCard from "../components/ProductoCard";
 import { API_BASE_URL, CLOUDINARY_BASE_URL } from "../config";
-import { useLocation } from "react-router-dom";
 
 let io = null;
-try { io = require("socket.io-client"); } catch(e){ io = null; }
+try { io = require("socket.io-client"); } catch(e) { io = null; }
 
-function normalizarCategoria(catRaw){
-  if(!catRaw) return "otros";
+function normalizarCategoria(catRaw) {
+  if (!catRaw) return "otros";
 
   const cat = catRaw
     .trim()
@@ -15,23 +14,19 @@ function normalizarCategoria(catRaw){
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g,"");
 
-
-  if(cat.includes("hombre") || cat.includes("varon") || cat.includes("caballero"))
-    return "ropa-hombre";
+  if (
+    cat.includes("blanqueria") ||
+    cat.includes("sabana") ||
+    cat.includes("toalla") ||
+    cat.includes("acolchado") ||
+    cat.includes("cortina") ||
+    cat.includes("repasador")
+  ) return "blanqueria";
 
   return "otros";
 }
 
-function normalizarTexto(txt){
-  if(!txt) return "";
-
-  return txt
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g,"")
-    .trim();
-}
-
+// dividir productos en filas
 const chunkArray = (arr, chunkSize) => {
   const result = [];
   for(let i=0;i<arr.length;i+=chunkSize){
@@ -40,61 +35,53 @@ const chunkArray = (arr, chunkSize) => {
   return result;
 };
 
-export default function RopaDeHombre(){
+export default function Blanqueria() {
 
-  const [productos,setProductos] = useState([]);
-  const [loading,setLoading] = useState(true);
-  const [error,setError] = useState(null);
+  const [productos, setProductos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const rawRef = useRef([]);
   const socketRef = useRef(null);
-  const location = useLocation();
 
-  const queryParams = new URLSearchParams(location.search);
+  const mezclarBalanceado = (lista) => {
 
-  const subcategoriaQuery = normalizarTexto(
-    queryParams.get("subcategoria") || ""
-  );
+    const grupos = {};
 
-  const tituloSubcategoria = queryParams.get("subcategoria") || null;
-
-  const mezclarBalanceado = (lista)=>{
-    const grupos={};
-
-    lista.forEach(p=>{
-      const key = normalizarTexto(p.subcategoria) || "otros";
-
-      if(!grupos[key]) grupos[key]=[];
-
-      grupos[key].push(p);
+    lista.forEach(p => {
+      if(!grupos[p.categoria]) grupos[p.categoria]=[];
+      grupos[p.categoria].push(p);
     });
 
-    const resultado=[];
-    let restos=true;
-
-    const categorias=Object.keys(grupos);
+    const resultado = [];
+    let restos = true;
+    const categorias = Object.keys(grupos);
 
     while(restos){
-      restos=false;
 
+      restos=false;
       const orden=[...categorias].sort(()=>Math.random()-0.5);
 
       for(const cat of orden){
+
         if(grupos[cat].length>0){
           resultado.push(grupos[cat].shift());
           restos=true;
         }
+
       }
+
     }
 
     return resultado;
+
   };
 
-  const fetchProductos = async()=>{
+  const fetchProductos = async () => {
 
     setLoading(true);
 
-    try{
+    try {
 
       const res = await fetch(`${API_BASE_URL}/products`);
 
@@ -102,80 +89,61 @@ export default function RopaDeHombre(){
 
       const data = await res.json();
 
-      const prods = (data.products || []).map(p=>({
-
+      const prods = (data.products || []).map(p => ({
         ...p,
-
-        id:p.id || p._id,
-
+        id: p.id || p._id,
         categoria: normalizarCategoria(p.categoria),
-
-        subcategoria: normalizarTexto(p.subcategoria) || "otros",
-
         precio: parseFloat(p.precio) || 0,
-
         imageUrl: p.imageUrl && !p.imageUrl.startsWith("http")
           ? `${CLOUDINARY_BASE_URL}${p.imageUrl}`
-          : p.imageUrl
-
+          : p.imageUrl,
       }));
 
-      rawRef.current = prods.filter(p => {
-
-        if(p.categoria !== "ropa-hombre") return false;
-
-        if(subcategoriaQuery){
-          return normalizarTexto(p.subcategoria) === subcategoriaQuery;
-        }
-
-        return true;
-
-      });
+      rawRef.current = prods.filter(p => p.categoria === "blanqueria");
 
       setProductos(mezclarBalanceado(rawRef.current));
-
       setError(null);
 
-    }catch(err){
+    } catch(err){
 
       console.error(err);
-
-      setError("No se pudieron cargar los productos de ropa de hombre.");
-
+      setError("No se pudieron cargar los productos de blanquería.");
       setProductos([]);
 
-    }finally{
+    } finally {
 
       setLoading(false);
 
     }
+
   };
 
-  useEffect(()=>{
+  useEffect(() => {
 
     fetchProductos();
 
-    let socketClient=null;
+    let socketClient = null;
 
-    try{
+    try {
 
       if(io){
 
-        socketClient=io.connect(window.location.origin);
+        socketClient = io.connect(window.location.origin);
+        socketRef.current = socketClient;
 
-        socketRef.current=socketClient;
-
-        socketClient.on("productos:changed",fetchProductos);
+        socketClient.on("productos:changed", fetchProductos);
 
       }
 
-    }catch{}
+    } catch {}
 
-    return ()=>{
+    return () => {
+
       if(socketRef.current) socketRef.current.disconnect();
+
     };
 
-  },[subcategoriaQuery]);
+  }, []);
 
   const COLUMNAS_MOBILE = 4;
 
@@ -185,20 +153,18 @@ export default function RopaDeHombre(){
 
       <div className="max-w-7xl mx-auto">
 
-        <div className="mb-10 text-center">
-
-          <h1 className="text-3xl font-bold text-gray-800">
-            {tituloSubcategoria ? tituloSubcategoria : "Ropa de hombre"}
-          </h1>
-
-        </div>
+        <h2 className="text-2xl font-body font-semibold mb-6 text-black drop-shadow-sm">
+          Blanquería
+        </h2>
 
         {loading ? (
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
 
             {Array(COLUMNAS_MOBILE*2).fill(0).map((_,i)=>
+
               <div key={i} className="bg-gray-200 rounded-xl h-64 animate-pulse"></div>
+
             )}
 
           </div>
@@ -211,9 +177,11 @@ export default function RopaDeHombre(){
 
           <>
 
+            {/* MOBILE */}
+
             <div className="sm:hidden space-y-4">
 
-              {chunkArray(productos, COLUMNAS_MOBILE).map((filaProductos,index)=>(
+              {chunkArray(productos, COLUMNAS_MOBILE).map((filaProductos, index) => (
 
                 <div
                   key={index}
@@ -221,11 +189,15 @@ export default function RopaDeHombre(){
                   style={{ scrollSnapType: "x mandatory" }}
                 >
 
-                  {filaProductos.map(p=>(
+                  {filaProductos.map(p => (
 
-                    <div key={p.id} className="flex-shrink-0 w-64" style={{ scrollSnapAlign: "start" }}>
+                    <div
+                      key={p.id}
+                      className="flex-shrink-0 w-64"
+                      style={{ scrollSnapAlign: "start" }}
+                    >
 
-                      <ProductoCard producto={p}/>
+                      <ProductoCard producto={p} />
 
                     </div>
 
@@ -237,11 +209,15 @@ export default function RopaDeHombre(){
 
             </div>
 
+            {/* DESKTOP */}
+
             <div className="hidden sm:grid sm:grid-cols-2 md:grid-cols-3 gap-6">
 
-              {productos.map(p=>
-                <ProductoCard key={p.id} producto={p}/>
-              )}
+              {productos.map(p => (
+
+                <ProductoCard key={p.id} producto={p} />
+
+              ))}
 
             </div>
 
@@ -249,7 +225,7 @@ export default function RopaDeHombre(){
 
         ) : (
 
-          <p className="text-gray-600 text-center">
+          <p className="text-gray-600">
             No hay productos disponibles en esta sección por el momento.
           </p>
 
@@ -260,4 +236,5 @@ export default function RopaDeHombre(){
     </section>
 
   );
+
 }
