@@ -131,7 +131,9 @@ router.post('/', authenticate, upload.single('image'), validateProduct, async (r
     );
 
     const imagenes = req.body.imagenes
-      ? JSON.parse(req.body.imagenes)
+      ? (typeof req.body.imagenes === "string"
+          ? JSON.parse(req.body.imagenes)
+          : req.body.imagenes)
       : [];
 
     const newProduct = await Product.create({
@@ -190,7 +192,9 @@ router.put('/:id', authenticate, upload.single('image'), loadProduct, validatePr
     );
 
     const imagenes = req.body.imagenes
-      ? JSON.parse(req.body.imagenes)
+      ? (typeof req.body.imagenes === "string"
+          ? JSON.parse(req.body.imagenes)
+          : req.body.imagenes)
       : req.product.imagenes;
 
     await req.product.update({
