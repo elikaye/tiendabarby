@@ -29,8 +29,8 @@ function normalizarSubcategoriaCalzado(subRaw){
   const sub = normalizarTexto(subRaw);
 
   if(sub.includes("borce")) return "borcegos";
-  if(sub.includes("adult")) return "zapatillas adultos";
-  if(sub.includes("niñ") || sub.includes("nin")) return "zapatillas niños";
+  if(sub.includes("adult")) return "zapatillas de adultos";
+  if(sub.includes("niñ") || sub.includes("nin")) return "zapatillas de niños";
   if(sub.includes("ojota") || sub.includes("pantuf")) return "ojotas y pantuflas";
   if(sub.includes("sandal")) return "sandalias";
 
